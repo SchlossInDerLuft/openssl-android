@@ -2,4 +2,4 @@
 
 <manifest>
     <uses-sdk android:minSdkVersion="10"></uses-sdk>
-</manfest>
+</manifest>
