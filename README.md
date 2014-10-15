@@ -15,7 +15,7 @@ This repository tracks the Android openssl repository: https://android.googlesou
 To use this, add it as a remote called 'upstream'
 
 ```shell
-git remote add upstream git://android.git.kernel.org/platform/external/openssl.git
+git remote add upstream https://android.googlesource.com/platform/external/openssl.git
 ```
 
 Then here's how you get the updated code:
