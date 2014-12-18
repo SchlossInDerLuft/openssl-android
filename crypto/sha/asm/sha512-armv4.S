@@ -411,6 +411,1347 @@ sha512_block_data_order:
 	tst	lr,#1
 	moveq	pc,lr			@ be binary compatible with V4, yet
 	.word	0xe12fff1e			@ interoperable with Thumb ISA:-)
-.size   sha512_block_data_order,.-sha512_block_data_order
-.asciz  "SHA512 block transform for ARMv4, CRYPTOGAMS by <appro@openssl.org>"
+#endif
+#if __ARM_ARCH__>=7
+.fpu	neon
+
+.align	4
+.LNEON:
+	dmb				@ errata #451034 on early Cortex A8
+	vstmdb	sp!,{d8-d15}		@ ABI specification says so
+	sub	r3,r3,#672		@ K512
+	vldmia	r0,{d16-d23}		@ load context
+.Loop_neon:
+	vshr.u64	d24,d20,#14	@ 0
+#if 0<16
+	vld1.64		{d0},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d20,#18
+	vshr.u64	d26,d20,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d20,#50
+	vsli.64		d25,d20,#46
+	vsli.64		d26,d20,#23
+#if 0<16 && defined(__ARMEL__)
+	vrev64.8	d0,d0
+#endif
+	vadd.i64	d27,d28,d23
+	veor		d29,d21,d22
+	veor		d24,d25
+	vand		d29,d20
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d22			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d16,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d16,#34
+	vshr.u64	d26,d16,#39
+	vsli.64		d24,d16,#36
+	vsli.64		d25,d16,#30
+	vsli.64		d26,d16,#25
+	vadd.i64	d27,d0
+	vorr		d30,d16,d18
+	vand		d29,d16,d18
+	veor		d23,d24,d25
+	vand		d30,d17
+	veor		d23,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d23,d27
+	vadd.i64	d19,d27
+	vadd.i64	d23,d30
+	vshr.u64	d24,d19,#14	@ 1
+#if 1<16
+	vld1.64		{d1},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d19,#18
+	vshr.u64	d26,d19,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d19,#50
+	vsli.64		d25,d19,#46
+	vsli.64		d26,d19,#23
+#if 1<16 && defined(__ARMEL__)
+	vrev64.8	d1,d1
+#endif
+	vadd.i64	d27,d28,d22
+	veor		d29,d20,d21
+	veor		d24,d25
+	vand		d29,d19
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d21			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d23,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d23,#34
+	vshr.u64	d26,d23,#39
+	vsli.64		d24,d23,#36
+	vsli.64		d25,d23,#30
+	vsli.64		d26,d23,#25
+	vadd.i64	d27,d1
+	vorr		d30,d23,d17
+	vand		d29,d23,d17
+	veor		d22,d24,d25
+	vand		d30,d16
+	veor		d22,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d22,d27
+	vadd.i64	d18,d27
+	vadd.i64	d22,d30
+	vshr.u64	d24,d18,#14	@ 2
+#if 2<16
+	vld1.64		{d2},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d18,#18
+	vshr.u64	d26,d18,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d18,#50
+	vsli.64		d25,d18,#46
+	vsli.64		d26,d18,#23
+#if 2<16 && defined(__ARMEL__)
+	vrev64.8	d2,d2
+#endif
+	vadd.i64	d27,d28,d21
+	veor		d29,d19,d20
+	veor		d24,d25
+	vand		d29,d18
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d20			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d22,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d22,#34
+	vshr.u64	d26,d22,#39
+	vsli.64		d24,d22,#36
+	vsli.64		d25,d22,#30
+	vsli.64		d26,d22,#25
+	vadd.i64	d27,d2
+	vorr		d30,d22,d16
+	vand		d29,d22,d16
+	veor		d21,d24,d25
+	vand		d30,d23
+	veor		d21,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d21,d27
+	vadd.i64	d17,d27
+	vadd.i64	d21,d30
+	vshr.u64	d24,d17,#14	@ 3
+#if 3<16
+	vld1.64		{d3},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d17,#18
+	vshr.u64	d26,d17,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d17,#50
+	vsli.64		d25,d17,#46
+	vsli.64		d26,d17,#23
+#if 3<16 && defined(__ARMEL__)
+	vrev64.8	d3,d3
+#endif
+	vadd.i64	d27,d28,d20
+	veor		d29,d18,d19
+	veor		d24,d25
+	vand		d29,d17
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d19			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d21,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d21,#34
+	vshr.u64	d26,d21,#39
+	vsli.64		d24,d21,#36
+	vsli.64		d25,d21,#30
+	vsli.64		d26,d21,#25
+	vadd.i64	d27,d3
+	vorr		d30,d21,d23
+	vand		d29,d21,d23
+	veor		d20,d24,d25
+	vand		d30,d22
+	veor		d20,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d20,d27
+	vadd.i64	d16,d27
+	vadd.i64	d20,d30
+	vshr.u64	d24,d16,#14	@ 4
+#if 4<16
+	vld1.64		{d4},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d16,#18
+	vshr.u64	d26,d16,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d16,#50
+	vsli.64		d25,d16,#46
+	vsli.64		d26,d16,#23
+#if 4<16 && defined(__ARMEL__)
+	vrev64.8	d4,d4
+#endif
+	vadd.i64	d27,d28,d19
+	veor		d29,d17,d18
+	veor		d24,d25
+	vand		d29,d16
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d18			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d20,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d20,#34
+	vshr.u64	d26,d20,#39
+	vsli.64		d24,d20,#36
+	vsli.64		d25,d20,#30
+	vsli.64		d26,d20,#25
+	vadd.i64	d27,d4
+	vorr		d30,d20,d22
+	vand		d29,d20,d22
+	veor		d19,d24,d25
+	vand		d30,d21
+	veor		d19,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d19,d27
+	vadd.i64	d23,d27
+	vadd.i64	d19,d30
+	vshr.u64	d24,d23,#14	@ 5
+#if 5<16
+	vld1.64		{d5},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d23,#18
+	vshr.u64	d26,d23,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d23,#50
+	vsli.64		d25,d23,#46
+	vsli.64		d26,d23,#23
+#if 5<16 && defined(__ARMEL__)
+	vrev64.8	d5,d5
+#endif
+	vadd.i64	d27,d28,d18
+	veor		d29,d16,d17
+	veor		d24,d25
+	vand		d29,d23
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d17			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d19,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d19,#34
+	vshr.u64	d26,d19,#39
+	vsli.64		d24,d19,#36
+	vsli.64		d25,d19,#30
+	vsli.64		d26,d19,#25
+	vadd.i64	d27,d5
+	vorr		d30,d19,d21
+	vand		d29,d19,d21
+	veor		d18,d24,d25
+	vand		d30,d20
+	veor		d18,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d18,d27
+	vadd.i64	d22,d27
+	vadd.i64	d18,d30
+	vshr.u64	d24,d22,#14	@ 6
+#if 6<16
+	vld1.64		{d6},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d22,#18
+	vshr.u64	d26,d22,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d22,#50
+	vsli.64		d25,d22,#46
+	vsli.64		d26,d22,#23
+#if 6<16 && defined(__ARMEL__)
+	vrev64.8	d6,d6
+#endif
+	vadd.i64	d27,d28,d17
+	veor		d29,d23,d16
+	veor		d24,d25
+	vand		d29,d22
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d16			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d18,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d18,#34
+	vshr.u64	d26,d18,#39
+	vsli.64		d24,d18,#36
+	vsli.64		d25,d18,#30
+	vsli.64		d26,d18,#25
+	vadd.i64	d27,d6
+	vorr		d30,d18,d20
+	vand		d29,d18,d20
+	veor		d17,d24,d25
+	vand		d30,d19
+	veor		d17,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d17,d27
+	vadd.i64	d21,d27
+	vadd.i64	d17,d30
+	vshr.u64	d24,d21,#14	@ 7
+#if 7<16
+	vld1.64		{d7},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d21,#18
+	vshr.u64	d26,d21,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d21,#50
+	vsli.64		d25,d21,#46
+	vsli.64		d26,d21,#23
+#if 7<16 && defined(__ARMEL__)
+	vrev64.8	d7,d7
+#endif
+	vadd.i64	d27,d28,d16
+	veor		d29,d22,d23
+	veor		d24,d25
+	vand		d29,d21
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d23			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d17,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d17,#34
+	vshr.u64	d26,d17,#39
+	vsli.64		d24,d17,#36
+	vsli.64		d25,d17,#30
+	vsli.64		d26,d17,#25
+	vadd.i64	d27,d7
+	vorr		d30,d17,d19
+	vand		d29,d17,d19
+	veor		d16,d24,d25
+	vand		d30,d18
+	veor		d16,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d16,d27
+	vadd.i64	d20,d27
+	vadd.i64	d16,d30
+	vshr.u64	d24,d20,#14	@ 8
+#if 8<16
+	vld1.64		{d8},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d20,#18
+	vshr.u64	d26,d20,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d20,#50
+	vsli.64		d25,d20,#46
+	vsli.64		d26,d20,#23
+#if 8<16 && defined(__ARMEL__)
+	vrev64.8	d8,d8
+#endif
+	vadd.i64	d27,d28,d23
+	veor		d29,d21,d22
+	veor		d24,d25
+	vand		d29,d20
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d22			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d16,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d16,#34
+	vshr.u64	d26,d16,#39
+	vsli.64		d24,d16,#36
+	vsli.64		d25,d16,#30
+	vsli.64		d26,d16,#25
+	vadd.i64	d27,d8
+	vorr		d30,d16,d18
+	vand		d29,d16,d18
+	veor		d23,d24,d25
+	vand		d30,d17
+	veor		d23,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d23,d27
+	vadd.i64	d19,d27
+	vadd.i64	d23,d30
+	vshr.u64	d24,d19,#14	@ 9
+#if 9<16
+	vld1.64		{d9},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d19,#18
+	vshr.u64	d26,d19,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d19,#50
+	vsli.64		d25,d19,#46
+	vsli.64		d26,d19,#23
+#if 9<16 && defined(__ARMEL__)
+	vrev64.8	d9,d9
+#endif
+	vadd.i64	d27,d28,d22
+	veor		d29,d20,d21
+	veor		d24,d25
+	vand		d29,d19
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d21			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d23,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d23,#34
+	vshr.u64	d26,d23,#39
+	vsli.64		d24,d23,#36
+	vsli.64		d25,d23,#30
+	vsli.64		d26,d23,#25
+	vadd.i64	d27,d9
+	vorr		d30,d23,d17
+	vand		d29,d23,d17
+	veor		d22,d24,d25
+	vand		d30,d16
+	veor		d22,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d22,d27
+	vadd.i64	d18,d27
+	vadd.i64	d22,d30
+	vshr.u64	d24,d18,#14	@ 10
+#if 10<16
+	vld1.64		{d10},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d18,#18
+	vshr.u64	d26,d18,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d18,#50
+	vsli.64		d25,d18,#46
+	vsli.64		d26,d18,#23
+#if 10<16 && defined(__ARMEL__)
+	vrev64.8	d10,d10
+#endif
+	vadd.i64	d27,d28,d21
+	veor		d29,d19,d20
+	veor		d24,d25
+	vand		d29,d18
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d20			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d22,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d22,#34
+	vshr.u64	d26,d22,#39
+	vsli.64		d24,d22,#36
+	vsli.64		d25,d22,#30
+	vsli.64		d26,d22,#25
+	vadd.i64	d27,d10
+	vorr		d30,d22,d16
+	vand		d29,d22,d16
+	veor		d21,d24,d25
+	vand		d30,d23
+	veor		d21,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d21,d27
+	vadd.i64	d17,d27
+	vadd.i64	d21,d30
+	vshr.u64	d24,d17,#14	@ 11
+#if 11<16
+	vld1.64		{d11},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d17,#18
+	vshr.u64	d26,d17,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d17,#50
+	vsli.64		d25,d17,#46
+	vsli.64		d26,d17,#23
+#if 11<16 && defined(__ARMEL__)
+	vrev64.8	d11,d11
+#endif
+	vadd.i64	d27,d28,d20
+	veor		d29,d18,d19
+	veor		d24,d25
+	vand		d29,d17
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d19			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d21,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d21,#34
+	vshr.u64	d26,d21,#39
+	vsli.64		d24,d21,#36
+	vsli.64		d25,d21,#30
+	vsli.64		d26,d21,#25
+	vadd.i64	d27,d11
+	vorr		d30,d21,d23
+	vand		d29,d21,d23
+	veor		d20,d24,d25
+	vand		d30,d22
+	veor		d20,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d20,d27
+	vadd.i64	d16,d27
+	vadd.i64	d20,d30
+	vshr.u64	d24,d16,#14	@ 12
+#if 12<16
+	vld1.64		{d12},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d16,#18
+	vshr.u64	d26,d16,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d16,#50
+	vsli.64		d25,d16,#46
+	vsli.64		d26,d16,#23
+#if 12<16 && defined(__ARMEL__)
+	vrev64.8	d12,d12
+#endif
+	vadd.i64	d27,d28,d19
+	veor		d29,d17,d18
+	veor		d24,d25
+	vand		d29,d16
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d18			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d20,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d20,#34
+	vshr.u64	d26,d20,#39
+	vsli.64		d24,d20,#36
+	vsli.64		d25,d20,#30
+	vsli.64		d26,d20,#25
+	vadd.i64	d27,d12
+	vorr		d30,d20,d22
+	vand		d29,d20,d22
+	veor		d19,d24,d25
+	vand		d30,d21
+	veor		d19,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d19,d27
+	vadd.i64	d23,d27
+	vadd.i64	d19,d30
+	vshr.u64	d24,d23,#14	@ 13
+#if 13<16
+	vld1.64		{d13},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d23,#18
+	vshr.u64	d26,d23,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d23,#50
+	vsli.64		d25,d23,#46
+	vsli.64		d26,d23,#23
+#if 13<16 && defined(__ARMEL__)
+	vrev64.8	d13,d13
+#endif
+	vadd.i64	d27,d28,d18
+	veor		d29,d16,d17
+	veor		d24,d25
+	vand		d29,d23
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d17			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d19,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d19,#34
+	vshr.u64	d26,d19,#39
+	vsli.64		d24,d19,#36
+	vsli.64		d25,d19,#30
+	vsli.64		d26,d19,#25
+	vadd.i64	d27,d13
+	vorr		d30,d19,d21
+	vand		d29,d19,d21
+	veor		d18,d24,d25
+	vand		d30,d20
+	veor		d18,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d18,d27
+	vadd.i64	d22,d27
+	vadd.i64	d18,d30
+	vshr.u64	d24,d22,#14	@ 14
+#if 14<16
+	vld1.64		{d14},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d22,#18
+	vshr.u64	d26,d22,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d22,#50
+	vsli.64		d25,d22,#46
+	vsli.64		d26,d22,#23
+#if 14<16 && defined(__ARMEL__)
+	vrev64.8	d14,d14
+#endif
+	vadd.i64	d27,d28,d17
+	veor		d29,d23,d16
+	veor		d24,d25
+	vand		d29,d22
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d16			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d18,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d18,#34
+	vshr.u64	d26,d18,#39
+	vsli.64		d24,d18,#36
+	vsli.64		d25,d18,#30
+	vsli.64		d26,d18,#25
+	vadd.i64	d27,d14
+	vorr		d30,d18,d20
+	vand		d29,d18,d20
+	veor		d17,d24,d25
+	vand		d30,d19
+	veor		d17,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d17,d27
+	vadd.i64	d21,d27
+	vadd.i64	d17,d30
+	vshr.u64	d24,d21,#14	@ 15
+#if 15<16
+	vld1.64		{d15},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d21,#18
+	vshr.u64	d26,d21,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d21,#50
+	vsli.64		d25,d21,#46
+	vsli.64		d26,d21,#23
+#if 15<16 && defined(__ARMEL__)
+	vrev64.8	d15,d15
+#endif
+	vadd.i64	d27,d28,d16
+	veor		d29,d22,d23
+	veor		d24,d25
+	vand		d29,d21
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d23			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d17,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d17,#34
+	vshr.u64	d26,d17,#39
+	vsli.64		d24,d17,#36
+	vsli.64		d25,d17,#30
+	vsli.64		d26,d17,#25
+	vadd.i64	d27,d15
+	vorr		d30,d17,d19
+	vand		d29,d17,d19
+	veor		d16,d24,d25
+	vand		d30,d18
+	veor		d16,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d16,d27
+	vadd.i64	d20,d27
+	vadd.i64	d16,d30
+	mov		r12,#4
+.L16_79_neon:
+	subs		r12,#1
+	vshr.u64	q12,q7,#19
+	vshr.u64	q13,q7,#61
+	vshr.u64	q15,q7,#6
+	vsli.64		q12,q7,#45
+	vext.8		q14,q0,q1,#8	@ X[i+1]
+	vsli.64		q13,q7,#3
+	veor		q15,q12
+	vshr.u64	q12,q14,#1
+	veor		q15,q13				@ sigma1(X[i+14])
+	vshr.u64	q13,q14,#8
+	vadd.i64	q0,q15
+	vshr.u64	q15,q14,#7
+	vsli.64		q12,q14,#63
+	vsli.64		q13,q14,#56
+	vext.8		q14,q4,q5,#8	@ X[i+9]
+	veor		q15,q12
+	vshr.u64	d24,d20,#14		@ from NEON_00_15
+	vadd.i64	q0,q14
+	vshr.u64	d25,d20,#18		@ from NEON_00_15
+	veor		q15,q13				@ sigma0(X[i+1])
+	vshr.u64	d26,d20,#41		@ from NEON_00_15
+	vadd.i64	q0,q15
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d20,#50
+	vsli.64		d25,d20,#46
+	vsli.64		d26,d20,#23
+#if 16<16 && defined(__ARMEL__)
+	vrev64.8	,
+#endif
+	vadd.i64	d27,d28,d23
+	veor		d29,d21,d22
+	veor		d24,d25
+	vand		d29,d20
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d22			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d16,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d16,#34
+	vshr.u64	d26,d16,#39
+	vsli.64		d24,d16,#36
+	vsli.64		d25,d16,#30
+	vsli.64		d26,d16,#25
+	vadd.i64	d27,d0
+	vorr		d30,d16,d18
+	vand		d29,d16,d18
+	veor		d23,d24,d25
+	vand		d30,d17
+	veor		d23,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d23,d27
+	vadd.i64	d19,d27
+	vadd.i64	d23,d30
+	vshr.u64	d24,d19,#14	@ 17
+#if 17<16
+	vld1.64		{d1},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d19,#18
+	vshr.u64	d26,d19,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d19,#50
+	vsli.64		d25,d19,#46
+	vsli.64		d26,d19,#23
+#if 17<16 && defined(__ARMEL__)
+	vrev64.8	,
+#endif
+	vadd.i64	d27,d28,d22
+	veor		d29,d20,d21
+	veor		d24,d25
+	vand		d29,d19
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d21			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d23,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d23,#34
+	vshr.u64	d26,d23,#39
+	vsli.64		d24,d23,#36
+	vsli.64		d25,d23,#30
+	vsli.64		d26,d23,#25
+	vadd.i64	d27,d1
+	vorr		d30,d23,d17
+	vand		d29,d23,d17
+	veor		d22,d24,d25
+	vand		d30,d16
+	veor		d22,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d22,d27
+	vadd.i64	d18,d27
+	vadd.i64	d22,d30
+	vshr.u64	q12,q0,#19
+	vshr.u64	q13,q0,#61
+	vshr.u64	q15,q0,#6
+	vsli.64		q12,q0,#45
+	vext.8		q14,q1,q2,#8	@ X[i+1]
+	vsli.64		q13,q0,#3
+	veor		q15,q12
+	vshr.u64	q12,q14,#1
+	veor		q15,q13				@ sigma1(X[i+14])
+	vshr.u64	q13,q14,#8
+	vadd.i64	q1,q15
+	vshr.u64	q15,q14,#7
+	vsli.64		q12,q14,#63
+	vsli.64		q13,q14,#56
+	vext.8		q14,q5,q6,#8	@ X[i+9]
+	veor		q15,q12
+	vshr.u64	d24,d18,#14		@ from NEON_00_15
+	vadd.i64	q1,q14
+	vshr.u64	d25,d18,#18		@ from NEON_00_15
+	veor		q15,q13				@ sigma0(X[i+1])
+	vshr.u64	d26,d18,#41		@ from NEON_00_15
+	vadd.i64	q1,q15
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d18,#50
+	vsli.64		d25,d18,#46
+	vsli.64		d26,d18,#23
+#if 18<16 && defined(__ARMEL__)
+	vrev64.8	,
+#endif
+	vadd.i64	d27,d28,d21
+	veor		d29,d19,d20
+	veor		d24,d25
+	vand		d29,d18
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d20			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d22,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d22,#34
+	vshr.u64	d26,d22,#39
+	vsli.64		d24,d22,#36
+	vsli.64		d25,d22,#30
+	vsli.64		d26,d22,#25
+	vadd.i64	d27,d2
+	vorr		d30,d22,d16
+	vand		d29,d22,d16
+	veor		d21,d24,d25
+	vand		d30,d23
+	veor		d21,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d21,d27
+	vadd.i64	d17,d27
+	vadd.i64	d21,d30
+	vshr.u64	d24,d17,#14	@ 19
+#if 19<16
+	vld1.64		{d3},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d17,#18
+	vshr.u64	d26,d17,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d17,#50
+	vsli.64		d25,d17,#46
+	vsli.64		d26,d17,#23
+#if 19<16 && defined(__ARMEL__)
+	vrev64.8	,
+#endif
+	vadd.i64	d27,d28,d20
+	veor		d29,d18,d19
+	veor		d24,d25
+	vand		d29,d17
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d19			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d21,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d21,#34
+	vshr.u64	d26,d21,#39
+	vsli.64		d24,d21,#36
+	vsli.64		d25,d21,#30
+	vsli.64		d26,d21,#25
+	vadd.i64	d27,d3
+	vorr		d30,d21,d23
+	vand		d29,d21,d23
+	veor		d20,d24,d25
+	vand		d30,d22
+	veor		d20,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d20,d27
+	vadd.i64	d16,d27
+	vadd.i64	d20,d30
+	vshr.u64	q12,q1,#19
+	vshr.u64	q13,q1,#61
+	vshr.u64	q15,q1,#6
+	vsli.64		q12,q1,#45
+	vext.8		q14,q2,q3,#8	@ X[i+1]
+	vsli.64		q13,q1,#3
+	veor		q15,q12
+	vshr.u64	q12,q14,#1
+	veor		q15,q13				@ sigma1(X[i+14])
+	vshr.u64	q13,q14,#8
+	vadd.i64	q2,q15
+	vshr.u64	q15,q14,#7
+	vsli.64		q12,q14,#63
+	vsli.64		q13,q14,#56
+	vext.8		q14,q6,q7,#8	@ X[i+9]
+	veor		q15,q12
+	vshr.u64	d24,d16,#14		@ from NEON_00_15
+	vadd.i64	q2,q14
+	vshr.u64	d25,d16,#18		@ from NEON_00_15
+	veor		q15,q13				@ sigma0(X[i+1])
+	vshr.u64	d26,d16,#41		@ from NEON_00_15
+	vadd.i64	q2,q15
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d16,#50
+	vsli.64		d25,d16,#46
+	vsli.64		d26,d16,#23
+#if 20<16 && defined(__ARMEL__)
+	vrev64.8	,
+#endif
+	vadd.i64	d27,d28,d19
+	veor		d29,d17,d18
+	veor		d24,d25
+	vand		d29,d16
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d18			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d20,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d20,#34
+	vshr.u64	d26,d20,#39
+	vsli.64		d24,d20,#36
+	vsli.64		d25,d20,#30
+	vsli.64		d26,d20,#25
+	vadd.i64	d27,d4
+	vorr		d30,d20,d22
+	vand		d29,d20,d22
+	veor		d19,d24,d25
+	vand		d30,d21
+	veor		d19,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d19,d27
+	vadd.i64	d23,d27
+	vadd.i64	d19,d30
+	vshr.u64	d24,d23,#14	@ 21
+#if 21<16
+	vld1.64		{d5},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d23,#18
+	vshr.u64	d26,d23,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d23,#50
+	vsli.64		d25,d23,#46
+	vsli.64		d26,d23,#23
+#if 21<16 && defined(__ARMEL__)
+	vrev64.8	,
+#endif
+	vadd.i64	d27,d28,d18
+	veor		d29,d16,d17
+	veor		d24,d25
+	vand		d29,d23
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d17			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d19,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d19,#34
+	vshr.u64	d26,d19,#39
+	vsli.64		d24,d19,#36
+	vsli.64		d25,d19,#30
+	vsli.64		d26,d19,#25
+	vadd.i64	d27,d5
+	vorr		d30,d19,d21
+	vand		d29,d19,d21
+	veor		d18,d24,d25
+	vand		d30,d20
+	veor		d18,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d18,d27
+	vadd.i64	d22,d27
+	vadd.i64	d18,d30
+	vshr.u64	q12,q2,#19
+	vshr.u64	q13,q2,#61
+	vshr.u64	q15,q2,#6
+	vsli.64		q12,q2,#45
+	vext.8		q14,q3,q4,#8	@ X[i+1]
+	vsli.64		q13,q2,#3
+	veor		q15,q12
+	vshr.u64	q12,q14,#1
+	veor		q15,q13				@ sigma1(X[i+14])
+	vshr.u64	q13,q14,#8
+	vadd.i64	q3,q15
+	vshr.u64	q15,q14,#7
+	vsli.64		q12,q14,#63
+	vsli.64		q13,q14,#56
+	vext.8		q14,q7,q0,#8	@ X[i+9]
+	veor		q15,q12
+	vshr.u64	d24,d22,#14		@ from NEON_00_15
+	vadd.i64	q3,q14
+	vshr.u64	d25,d22,#18		@ from NEON_00_15
+	veor		q15,q13				@ sigma0(X[i+1])
+	vshr.u64	d26,d22,#41		@ from NEON_00_15
+	vadd.i64	q3,q15
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d22,#50
+	vsli.64		d25,d22,#46
+	vsli.64		d26,d22,#23
+#if 22<16 && defined(__ARMEL__)
+	vrev64.8	,
+#endif
+	vadd.i64	d27,d28,d17
+	veor		d29,d23,d16
+	veor		d24,d25
+	vand		d29,d22
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d16			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d18,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d18,#34
+	vshr.u64	d26,d18,#39
+	vsli.64		d24,d18,#36
+	vsli.64		d25,d18,#30
+	vsli.64		d26,d18,#25
+	vadd.i64	d27,d6
+	vorr		d30,d18,d20
+	vand		d29,d18,d20
+	veor		d17,d24,d25
+	vand		d30,d19
+	veor		d17,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d17,d27
+	vadd.i64	d21,d27
+	vadd.i64	d17,d30
+	vshr.u64	d24,d21,#14	@ 23
+#if 23<16
+	vld1.64		{d7},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d21,#18
+	vshr.u64	d26,d21,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d21,#50
+	vsli.64		d25,d21,#46
+	vsli.64		d26,d21,#23
+#if 23<16 && defined(__ARMEL__)
+	vrev64.8	,
+#endif
+	vadd.i64	d27,d28,d16
+	veor		d29,d22,d23
+	veor		d24,d25
+	vand		d29,d21
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d23			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d17,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d17,#34
+	vshr.u64	d26,d17,#39
+	vsli.64		d24,d17,#36
+	vsli.64		d25,d17,#30
+	vsli.64		d26,d17,#25
+	vadd.i64	d27,d7
+	vorr		d30,d17,d19
+	vand		d29,d17,d19
+	veor		d16,d24,d25
+	vand		d30,d18
+	veor		d16,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d16,d27
+	vadd.i64	d20,d27
+	vadd.i64	d16,d30
+	vshr.u64	q12,q3,#19
+	vshr.u64	q13,q3,#61
+	vshr.u64	q15,q3,#6
+	vsli.64		q12,q3,#45
+	vext.8		q14,q4,q5,#8	@ X[i+1]
+	vsli.64		q13,q3,#3
+	veor		q15,q12
+	vshr.u64	q12,q14,#1
+	veor		q15,q13				@ sigma1(X[i+14])
+	vshr.u64	q13,q14,#8
+	vadd.i64	q4,q15
+	vshr.u64	q15,q14,#7
+	vsli.64		q12,q14,#63
+	vsli.64		q13,q14,#56
+	vext.8		q14,q0,q1,#8	@ X[i+9]
+	veor		q15,q12
+	vshr.u64	d24,d20,#14		@ from NEON_00_15
+	vadd.i64	q4,q14
+	vshr.u64	d25,d20,#18		@ from NEON_00_15
+	veor		q15,q13				@ sigma0(X[i+1])
+	vshr.u64	d26,d20,#41		@ from NEON_00_15
+	vadd.i64	q4,q15
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d20,#50
+	vsli.64		d25,d20,#46
+	vsli.64		d26,d20,#23
+#if 24<16 && defined(__ARMEL__)
+	vrev64.8	,
+#endif
+	vadd.i64	d27,d28,d23
+	veor		d29,d21,d22
+	veor		d24,d25
+	vand		d29,d20
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d22			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d16,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d16,#34
+	vshr.u64	d26,d16,#39
+	vsli.64		d24,d16,#36
+	vsli.64		d25,d16,#30
+	vsli.64		d26,d16,#25
+	vadd.i64	d27,d8
+	vorr		d30,d16,d18
+	vand		d29,d16,d18
+	veor		d23,d24,d25
+	vand		d30,d17
+	veor		d23,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d23,d27
+	vadd.i64	d19,d27
+	vadd.i64	d23,d30
+	vshr.u64	d24,d19,#14	@ 25
+#if 25<16
+	vld1.64		{d9},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d19,#18
+	vshr.u64	d26,d19,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d19,#50
+	vsli.64		d25,d19,#46
+	vsli.64		d26,d19,#23
+#if 25<16 && defined(__ARMEL__)
+	vrev64.8	,
+#endif
+	vadd.i64	d27,d28,d22
+	veor		d29,d20,d21
+	veor		d24,d25
+	vand		d29,d19
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d21			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d23,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d23,#34
+	vshr.u64	d26,d23,#39
+	vsli.64		d24,d23,#36
+	vsli.64		d25,d23,#30
+	vsli.64		d26,d23,#25
+	vadd.i64	d27,d9
+	vorr		d30,d23,d17
+	vand		d29,d23,d17
+	veor		d22,d24,d25
+	vand		d30,d16
+	veor		d22,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d22,d27
+	vadd.i64	d18,d27
+	vadd.i64	d22,d30
+	vshr.u64	q12,q4,#19
+	vshr.u64	q13,q4,#61
+	vshr.u64	q15,q4,#6
+	vsli.64		q12,q4,#45
+	vext.8		q14,q5,q6,#8	@ X[i+1]
+	vsli.64		q13,q4,#3
+	veor		q15,q12
+	vshr.u64	q12,q14,#1
+	veor		q15,q13				@ sigma1(X[i+14])
+	vshr.u64	q13,q14,#8
+	vadd.i64	q5,q15
+	vshr.u64	q15,q14,#7
+	vsli.64		q12,q14,#63
+	vsli.64		q13,q14,#56
+	vext.8		q14,q1,q2,#8	@ X[i+9]
+	veor		q15,q12
+	vshr.u64	d24,d18,#14		@ from NEON_00_15
+	vadd.i64	q5,q14
+	vshr.u64	d25,d18,#18		@ from NEON_00_15
+	veor		q15,q13				@ sigma0(X[i+1])
+	vshr.u64	d26,d18,#41		@ from NEON_00_15
+	vadd.i64	q5,q15
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d18,#50
+	vsli.64		d25,d18,#46
+	vsli.64		d26,d18,#23
+#if 26<16 && defined(__ARMEL__)
+	vrev64.8	,
+#endif
+	vadd.i64	d27,d28,d21
+	veor		d29,d19,d20
+	veor		d24,d25
+	vand		d29,d18
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d20			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d22,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d22,#34
+	vshr.u64	d26,d22,#39
+	vsli.64		d24,d22,#36
+	vsli.64		d25,d22,#30
+	vsli.64		d26,d22,#25
+	vadd.i64	d27,d10
+	vorr		d30,d22,d16
+	vand		d29,d22,d16
+	veor		d21,d24,d25
+	vand		d30,d23
+	veor		d21,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d21,d27
+	vadd.i64	d17,d27
+	vadd.i64	d21,d30
+	vshr.u64	d24,d17,#14	@ 27
+#if 27<16
+	vld1.64		{d11},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d17,#18
+	vshr.u64	d26,d17,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d17,#50
+	vsli.64		d25,d17,#46
+	vsli.64		d26,d17,#23
+#if 27<16 && defined(__ARMEL__)
+	vrev64.8	,
+#endif
+	vadd.i64	d27,d28,d20
+	veor		d29,d18,d19
+	veor		d24,d25
+	vand		d29,d17
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d19			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d21,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d21,#34
+	vshr.u64	d26,d21,#39
+	vsli.64		d24,d21,#36
+	vsli.64		d25,d21,#30
+	vsli.64		d26,d21,#25
+	vadd.i64	d27,d11
+	vorr		d30,d21,d23
+	vand		d29,d21,d23
+	veor		d20,d24,d25
+	vand		d30,d22
+	veor		d20,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d20,d27
+	vadd.i64	d16,d27
+	vadd.i64	d20,d30
+	vshr.u64	q12,q5,#19
+	vshr.u64	q13,q5,#61
+	vshr.u64	q15,q5,#6
+	vsli.64		q12,q5,#45
+	vext.8		q14,q6,q7,#8	@ X[i+1]
+	vsli.64		q13,q5,#3
+	veor		q15,q12
+	vshr.u64	q12,q14,#1
+	veor		q15,q13				@ sigma1(X[i+14])
+	vshr.u64	q13,q14,#8
+	vadd.i64	q6,q15
+	vshr.u64	q15,q14,#7
+	vsli.64		q12,q14,#63
+	vsli.64		q13,q14,#56
+	vext.8		q14,q2,q3,#8	@ X[i+9]
+	veor		q15,q12
+	vshr.u64	d24,d16,#14		@ from NEON_00_15
+	vadd.i64	q6,q14
+	vshr.u64	d25,d16,#18		@ from NEON_00_15
+	veor		q15,q13				@ sigma0(X[i+1])
+	vshr.u64	d26,d16,#41		@ from NEON_00_15
+	vadd.i64	q6,q15
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d16,#50
+	vsli.64		d25,d16,#46
+	vsli.64		d26,d16,#23
+#if 28<16 && defined(__ARMEL__)
+	vrev64.8	,
+#endif
+	vadd.i64	d27,d28,d19
+	veor		d29,d17,d18
+	veor		d24,d25
+	vand		d29,d16
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d18			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d20,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d20,#34
+	vshr.u64	d26,d20,#39
+	vsli.64		d24,d20,#36
+	vsli.64		d25,d20,#30
+	vsli.64		d26,d20,#25
+	vadd.i64	d27,d12
+	vorr		d30,d20,d22
+	vand		d29,d20,d22
+	veor		d19,d24,d25
+	vand		d30,d21
+	veor		d19,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d19,d27
+	vadd.i64	d23,d27
+	vadd.i64	d19,d30
+	vshr.u64	d24,d23,#14	@ 29
+#if 29<16
+	vld1.64		{d13},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d23,#18
+	vshr.u64	d26,d23,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d23,#50
+	vsli.64		d25,d23,#46
+	vsli.64		d26,d23,#23
+#if 29<16 && defined(__ARMEL__)
+	vrev64.8	,
+#endif
+	vadd.i64	d27,d28,d18
+	veor		d29,d16,d17
+	veor		d24,d25
+	vand		d29,d23
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d17			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d19,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d19,#34
+	vshr.u64	d26,d19,#39
+	vsli.64		d24,d19,#36
+	vsli.64		d25,d19,#30
+	vsli.64		d26,d19,#25
+	vadd.i64	d27,d13
+	vorr		d30,d19,d21
+	vand		d29,d19,d21
+	veor		d18,d24,d25
+	vand		d30,d20
+	veor		d18,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d18,d27
+	vadd.i64	d22,d27
+	vadd.i64	d18,d30
+	vshr.u64	q12,q6,#19
+	vshr.u64	q13,q6,#61
+	vshr.u64	q15,q6,#6
+	vsli.64		q12,q6,#45
+	vext.8		q14,q7,q0,#8	@ X[i+1]
+	vsli.64		q13,q6,#3
+	veor		q15,q12
+	vshr.u64	q12,q14,#1
+	veor		q15,q13				@ sigma1(X[i+14])
+	vshr.u64	q13,q14,#8
+	vadd.i64	q7,q15
+	vshr.u64	q15,q14,#7
+	vsli.64		q12,q14,#63
+	vsli.64		q13,q14,#56
+	vext.8		q14,q3,q4,#8	@ X[i+9]
+	veor		q15,q12
+	vshr.u64	d24,d22,#14		@ from NEON_00_15
+	vadd.i64	q7,q14
+	vshr.u64	d25,d22,#18		@ from NEON_00_15
+	veor		q15,q13				@ sigma0(X[i+1])
+	vshr.u64	d26,d22,#41		@ from NEON_00_15
+	vadd.i64	q7,q15
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d22,#50
+	vsli.64		d25,d22,#46
+	vsli.64		d26,d22,#23
+#if 30<16 && defined(__ARMEL__)
+	vrev64.8	,
+#endif
+	vadd.i64	d27,d28,d17
+	veor		d29,d23,d16
+	veor		d24,d25
+	vand		d29,d22
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d16			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d18,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d18,#34
+	vshr.u64	d26,d18,#39
+	vsli.64		d24,d18,#36
+	vsli.64		d25,d18,#30
+	vsli.64		d26,d18,#25
+	vadd.i64	d27,d14
+	vorr		d30,d18,d20
+	vand		d29,d18,d20
+	veor		d17,d24,d25
+	vand		d30,d19
+	veor		d17,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d17,d27
+	vadd.i64	d21,d27
+	vadd.i64	d17,d30
+	vshr.u64	d24,d21,#14	@ 31
+#if 31<16
+	vld1.64		{d15},[r1]!	@ handles unaligned
+#endif
+	vshr.u64	d25,d21,#18
+	vshr.u64	d26,d21,#41
+	vld1.64		{d28},[r3,:64]!	@ K[i++]
+	vsli.64		d24,d21,#50
+	vsli.64		d25,d21,#46
+	vsli.64		d26,d21,#23
+#if 31<16 && defined(__ARMEL__)
+	vrev64.8	,
+#endif
+	vadd.i64	d27,d28,d16
+	veor		d29,d22,d23
+	veor		d24,d25
+	vand		d29,d21
+	veor		d24,d26			@ Sigma1(e)
+	veor		d29,d23			@ Ch(e,f,g)
+	vadd.i64	d27,d24
+	vshr.u64	d24,d17,#28
+	vadd.i64	d27,d29
+	vshr.u64	d25,d17,#34
+	vshr.u64	d26,d17,#39
+	vsli.64		d24,d17,#36
+	vsli.64		d25,d17,#30
+	vsli.64		d26,d17,#25
+	vadd.i64	d27,d15
+	vorr		d30,d17,d19
+	vand		d29,d17,d19
+	veor		d16,d24,d25
+	vand		d30,d18
+	veor		d16,d26			@ Sigma0(a)
+	vorr		d30,d29		@ Maj(a,b,c)
+	vadd.i64	d16,d27
+	vadd.i64	d20,d27
+	vadd.i64	d16,d30
+	bne		.L16_79_neon
+
+	vldmia		r0,{d24-d31}	@ load context to temp
+	vadd.i64	q8,q12		@ vectorized accumulate
+	vadd.i64	q9,q13
+	vadd.i64	q10,q14
+	vadd.i64	q11,q15
+	vstmia		r0,{d16-d23}	@ save context
+	teq		r1,r2
+	sub		r3,#640	@ rewind K512
+	bne		.Loop_neon
+
+	vldmia	sp!,{d8-d15}		@ epilogue
+	bx	lr				@ .word	0xe12fff1e
+#endif
+.size	sha512_block_data_order,.-sha512_block_data_order
+.asciz	"SHA512 block transform for ARMv4/NEON, CRYPTOGAMS by <appro@openssl.org>"
 .align	2
