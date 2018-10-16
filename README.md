@@ -3,10 +3,7 @@ This is a version of the official Android openssl sources, but it is meant to be
 
 ### Building the code
 
-To build:
-
-cd openssl-android
-ndk-build
+$ ./build.sh
 
 ### Updating the upstream code
 
